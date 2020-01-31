@@ -32,6 +32,6 @@ face-mask /path/to/face/picture --show
 ![](images/face-mask-multi.jpg)
 
 ### Comic persons wear masks
-Attention: Face recognition for comic face is not accurate enough.
+> Attention: Face recognition for comic face is not accurate enough.
 
 ![](images/face-mask-comic.jpg)
