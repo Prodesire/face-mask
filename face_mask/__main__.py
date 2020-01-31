@@ -4,17 +4,24 @@ import argparse
 import numpy as np
 from PIL import Image, ImageFile
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'
 
 
 IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')
 DEFAULT_IMAGE_PATH = os.path.join(IMAGE_DIR, 'default-mask.png')
+BLACK_IMAGE_PATH = os.path.join(IMAGE_DIR, 'black-mask.png')
+BLUE_IMAGE_PATH = os.path.join(IMAGE_DIR, 'blue-mask.png')
+RED_IMAGE_PATH = os.path.join(IMAGE_DIR, 'red-mask.png')
 
 
 def cli():
     parser = argparse.ArgumentParser(description='Wear a face mask in the given picture.')
     parser.add_argument('pic_path', help='Picture path.')
     parser.add_argument('--show', action='store_true', help='Whether show picture with mask or not.')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--black', action='store_true', help='Wear black mask')
+    group.add_argument('--blue', action='store_true', help='Wear blue mask')
+    group.add_argument('--red', action='store_true', help='Wear red mask')
     args = parser.parse_args()
 
     pic_path = args.pic_path
@@ -22,14 +29,24 @@ def cli():
         print(f'Picture {pic_path} not exists.')
         sys.exit(1)
 
-    FaceMasker(pic_path, args.show).mask()
+    if args.black:
+        mask_path = BLACK_IMAGE_PATH
+    elif args.blue:
+        mask_path = BLUE_IMAGE_PATH
+    elif args.red:
+        mask_path = RED_IMAGE_PATH
+    else:
+        mask_path = DEFAULT_IMAGE_PATH
+
+    FaceMasker(pic_path, mask_path, args.show).mask()
 
 
 class FaceMasker:
     KEY_FACIAL_FEATURES = ('nose_bridge', 'chin')
 
-    def __init__(self, face_path, show=False):
+    def __init__(self, face_path, mask_path, show=False):
         self.face_path = face_path
+        self.mask_path = mask_path
         self.show = show
         self._face_img: ImageFile = None
         self._mask_img: ImageFile = None
@@ -40,7 +57,7 @@ class FaceMasker:
         face_image_np = face_recognition.load_image_file(self.face_path)
         face_landmarks = face_recognition.face_landmarks(face_image_np)
         self._face_img = Image.fromarray(face_image_np)
-        self._mask_img = Image.open(DEFAULT_IMAGE_PATH)
+        self._mask_img = Image.open(self.mask_path)
 
         found_face = False
         for face_landmark in face_landmarks:

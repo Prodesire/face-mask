@@ -19,12 +19,22 @@ Specify face picture path and then auto save to face with mask picture path
 face-mask /path/to/face/picture
 ```
 
-If you want see the new picture with default viewer, please specify `--show` option.
+If you want to see the new picture with default viewer, please specify `--show` option.
 ```bash
 face-mask /path/to/face/picture --show
 ```
 
-## Effect
+If you want to wear different mask to face, then specify one of the options below:
+- `--black` for black mask
+- `--blue` for blue mask
+- `--red` for red mask
+
+For instance:
+```bash
+face-mask /path/to/face/picture --blue
+```
+
+## Effects
 ### One person wears a mask
 ![](images/face-mask-single.jpg)
 
