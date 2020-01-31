@@ -1,5 +1,5 @@
 # face-mask
-Wear a face mask in the given picture.
+Wear face masks in the given picture.
 
 ## Install
 Install by pip:
