@@ -1,0 +1,2 @@
+include requirements.txt README.md LICENSE
+include face_mask/images/*.png
