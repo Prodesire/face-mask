@@ -1,5 +1,5 @@
 # face-mask
-Wear a face mask in the given picture.
+Wear face masks in the given picture.
 
 ## Install
 Install by pip:
@@ -42,6 +42,6 @@ face-mask /path/to/face/picture --blue
 ![](images/face-mask-multi.jpg)
 
 ### Comic persons wear masks
-Attention: Face recognition for comic face is not accurate enough.
+> Attention: Face recognition for comic face is not accurate enough.
 
 ![](images/face-mask-comic.jpg)
