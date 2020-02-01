@@ -4,7 +4,7 @@ import argparse
 import numpy as np
 from PIL import Image, ImageFile
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
 
 IMAGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'images')
