@@ -18,6 +18,7 @@ def cli():
     parser = argparse.ArgumentParser(description='Wear a face mask in the given picture.')
     parser.add_argument('pic_path', help='Picture path.')
     parser.add_argument('--show', action='store_true', help='Whether show picture with mask or not.')
+    parser.add_argument('--model', default='hog', choices=['hog', 'cnn'], help='Which face detection model to use.')
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--black', action='store_true', help='Wear black mask')
     group.add_argument('--blue', action='store_true', help='Wear blue mask')
@@ -38,16 +39,17 @@ def cli():
     else:
         mask_path = DEFAULT_IMAGE_PATH
 
-    FaceMasker(pic_path, mask_path, args.show).mask()
+    FaceMasker(pic_path, mask_path, args.show, args.model).mask()
 
 
 class FaceMasker:
     KEY_FACIAL_FEATURES = ('nose_bridge', 'chin')
 
-    def __init__(self, face_path, mask_path, show=False):
+    def __init__(self, face_path, mask_path, show=False, model='hog'):
         self.face_path = face_path
         self.mask_path = mask_path
         self.show = show
+        self.model = model
         self._face_img: ImageFile = None
         self._mask_img: ImageFile = None
 
@@ -55,7 +57,8 @@ class FaceMasker:
         import face_recognition
 
         face_image_np = face_recognition.load_image_file(self.face_path)
-        face_landmarks = face_recognition.face_landmarks(face_image_np)
+        face_locations = face_recognition.face_locations(face_image_np, model=self.model)
+        face_landmarks = face_recognition.face_landmarks(face_image_np, face_locations)
         self._face_img = Image.fromarray(face_image_np)
         self._mask_img = Image.open(self.mask_path)
 
