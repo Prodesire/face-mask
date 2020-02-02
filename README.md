@@ -34,6 +34,14 @@ For instance:
 face-mask /path/to/face/picture --blue
 ```
 
+In addition, you can specify different detection models by `--model` option:
+- `hog` is less accurate but faster on CPUs.
+- `cnn` is a more accurate deep-learning model which is GPU/CUDA accelerated (if available).
+
+```bash
+face-mask /path/to/face/picture --model cnn
+```
+
 ## Effects
 ### One person wears a mask
 ![](images/face-mask-single.jpg)
