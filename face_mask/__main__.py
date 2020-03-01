@@ -12,9 +12,9 @@ DEFAULT_IMAGE_PATH = os.path.join(IMAGE_DIR, 'default-mask.png')
 BLACK_IMAGE_PATH = os.path.join(IMAGE_DIR, 'black-mask.png')
 BLUE_IMAGE_PATH = os.path.join(IMAGE_DIR, 'blue-mask.png')
 RED_IMAGE_PATH = os.path.join(IMAGE_DIR, 'red-mask.png')
+#设置素材文件路径
 
-
-def cli():
+def cli():  #使用def 开始函数定义
     parser = argparse.ArgumentParser(description='Wear a face mask in the given picture.')
     parser.add_argument('pic_path', help='Picture path.')
     parser.add_argument('--show', action='store_true', help='Whether show picture with mask or not.')
@@ -24,28 +24,30 @@ def cli():
     group.add_argument('--blue', action='store_true', help='Wear blue mask')
     group.add_argument('--red', action='store_true', help='Wear red mask')
     args = parser.parse_args()
+#设置命令行语句，与相对应的行为action，help可能是注释
+
 
     pic_path = args.pic_path
-    if not os.path.exists(args.pic_path):
+    if not os.path.exists(args.pic_path):   #判断用户选择的图片路径是否正确
         print(f'Picture {pic_path} not exists.')
         sys.exit(1)
 
-    if args.black:
-        mask_path = BLACK_IMAGE_PATH
+    if args.black:  #选择口罩，以及所调用的素材文件
+        mask_path = BLACK_IMAGE_PATH 
     elif args.blue:
         mask_path = BLUE_IMAGE_PATH
     elif args.red:
         mask_path = RED_IMAGE_PATH
     else:
-        mask_path = DEFAULT_IMAGE_PATH
+        mask_path = DEFAULT_IMAGE_PATH #默认素材
 
     FaceMasker(pic_path, mask_path, args.show, args.model).mask()
 
 
 class FaceMasker:
-    KEY_FACIAL_FEATURES = ('nose_bridge', 'chin')
+    KEY_FACIAL_FEATURES = ('nose_bridge', 'chin') #关键的人脸特征，键 nose_bridge 表示鼻梁，键 chin 表示脸颊
 
-    def __init__(self, face_path, mask_path, show=False, model='hog'):
+    def __init__(self, face_path, mask_path, show=False, model='hog'): #初始化函数，
         self.face_path = face_path
         self.mask_path = mask_path
         self.show = show
@@ -54,17 +56,18 @@ class FaceMasker:
         self._mask_img: ImageFile = None
 
     def mask(self):
-        import face_recognition
+        import face_recognition #导入人脸识别库，借助face_recognition库识别出人像，
+                                
 
-        face_image_np = face_recognition.load_image_file(self.face_path)
-        face_locations = face_recognition.face_locations(face_image_np, model=self.model)
-        face_landmarks = face_recognition.face_landmarks(face_image_np, face_locations)
+        face_image_np = face_recognition.load_image_file(self.face_path) #加载人脸图像 数据：路径
+        face_locations = face_recognition.face_locations(face_image_np, model=self.model) #获取人脸坐标
+        face_landmarks = face_recognition.face_landmarks(face_image_np, face_locations) #最终得到face_landmarks，其中每个face_landmark都表示一个人像数据
         self._face_img = Image.fromarray(face_image_np)
         self._mask_img = Image.open(self.mask_path)
 
         found_face = False
-        for face_landmark in face_landmarks:
-            # check whether facial features meet requirement
+        for face_landmark in face_landmarks: 
+            # check whether facial features meet requirement 检查是否面部特征出现问题
             skip = False
             for facial_feature in self.KEY_FACIAL_FEATURES:
                 if facial_feature not in face_landmark:
@@ -87,46 +90,46 @@ class FaceMasker:
             print('Found no face.')
 
     def _mask_face(self, face_landmark: dict):
-        nose_bridge = face_landmark['nose_bridge']
-        nose_point = nose_bridge[len(nose_bridge) * 1 // 4]
-        nose_v = np.array(nose_point)
+        nose_bridge = face_landmark['nose_bridge'] #获取鼻梁信息
+        nose_point = nose_bridge[len(nose_bridge) * 1 // 4] #获取鼻梁上一个点 nose_point
+        nose_v = np.array(nose_point) #多个鼻子时，形成数组
 
-        chin = face_landmark['chin']
-        chin_len = len(chin)
-        chin_bottom_point = chin[chin_len // 2]
-        chin_bottom_v = np.array(chin_bottom_point)
-        chin_left_point = chin[chin_len // 8]
-        chin_right_point = chin[chin_len * 7 // 8]
+        chin = face_landmark['chin'] #获取脸（下巴）信息
+        chin_len = len(chin) 
+        chin_bottom_point = chin[chin_len // 2] #脸底部点
+        chin_bottom_v = np.array(chin_bottom_point) #多个脸时形成数组
+        chin_left_point = chin[chin_len // 8] #脸左点
+        chin_right_point = chin[chin_len * 7 // 8] #脸右点
 
-        # split mask and resize
-        width = self._mask_img.width
-        height = self._mask_img.height
-        width_ratio = 1.2
+        # split mask and resize 拆分口罩，并调整
+        width = self._mask_img.width #获取口罩宽度
+        height = self._mask_img.height #获取口罩高度
+        width_ratio = 1.2 #宽度系数
         new_height = int(np.linalg.norm(nose_v - chin_bottom_v))
 
-        # left
+        # left 调整左口罩大小，宽度为脸左点到中心线的距离 * 宽度系数 1.2
         mask_left_img = self._mask_img.crop((0, 0, width // 2, height))
         mask_left_width = self.get_distance_from_point_to_line(chin_left_point, nose_point, chin_bottom_point)
         mask_left_width = int(mask_left_width * width_ratio)
         mask_left_img = mask_left_img.resize((mask_left_width, new_height))
 
-        # right
+        # right 调整右口罩大小，宽度为脸右点到中心线的距离 * 宽度系数 1.2
         mask_right_img = self._mask_img.crop((width // 2, 0, width, height))
         mask_right_width = self.get_distance_from_point_to_line(chin_right_point, nose_point, chin_bottom_point)
         mask_right_width = int(mask_right_width * width_ratio)
         mask_right_img = mask_right_img.resize((mask_right_width, new_height))
 
-        # merge mask
+        # merge mask 合并左右口罩为新口罩
         size = (mask_left_img.width + mask_right_img.width, new_height)
         mask_img = Image.new('RGBA', size)
         mask_img.paste(mask_left_img, (0, 0), mask_left_img)
         mask_img.paste(mask_right_img, (mask_left_img.width, 0), mask_right_img)
 
-        # rotate mask
+        # rotate mask 旋转新口罩，角度为中心线相对于 y 轴的旋转角
         angle = np.arctan2(chin_bottom_point[1] - nose_point[1], chin_bottom_point[0] - nose_point[0])
         rotated_mask_img = mask_img.rotate(angle, expand=True)
 
-        # calculate mask location
+        # calculate mask location 计算口罩应该放置的坐标
         center_x = (nose_point[0] + chin_bottom_point[0]) // 2
         center_y = (nose_point[1] + chin_bottom_point[1]) // 2
 
@@ -135,17 +138,17 @@ class FaceMasker:
         box_x = center_x + int(offset * np.cos(radian)) - rotated_mask_img.width // 2
         box_y = center_y + int(offset * np.sin(radian)) - rotated_mask_img.height // 2
 
-        # add mask
+        # add mask 将新口罩放在原图的计算出的坐标下
         self._face_img.paste(mask_img, (box_x, box_y), mask_img)
 
-    def _save(self):
+    def _save(self): #将新图片保存到本地路径
         path_splits = os.path.splitext(self.face_path)
         new_face_path = path_splits[0] + '-with-mask' + path_splits[1]
         self._face_img.save(new_face_path)
         print(f'Save to {new_face_path}')
 
-    @staticmethod
-    def get_distance_from_point_to_line(point, line_point1, line_point2):
+    @staticmethod #算法获得点到线距离的算法 
+    def get_distance_from_point_to_line(point, line_point1, line_point2): 
         distance = np.abs((line_point2[1] - line_point1[1]) * point[0] +
                           (line_point1[0] - line_point2[0]) * point[1] +
                           (line_point2[0] - line_point1[0]) * line_point1[1] +
@@ -157,3 +160,8 @@ class FaceMasker:
 
 if __name__ == '__main__':
     cli()
+
+
+##总结：我们借助 face_recognition 库可以轻松的识别出人像，
+# 然后根据脸颊的宽度和鼻梁位置计算出口罩的大小、方向和位置，
+# 并最终生成出戴上口罩的图片。
